@@ -105,6 +105,7 @@ function setup() {
         '@deepseek-ai/dsh': version,
         pnpm: manifest.pnpm,
       },
+      overrides: manifest.overrides,
     })
     const lockPath = join(scripts, manifest.dependencyLock.path)
     const lockBytes = readFileSync(lockPath)

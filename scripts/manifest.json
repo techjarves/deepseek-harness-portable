@@ -22,7 +22,7 @@
       "sha256": "6239d4cf92d864487ec8cd3615038f7b67e7f58b77b21cd2f09ea9fbd68065fe"
     }
   },
-  "pnpm": "11.7.0",
+  "pnpm": "11.28.0",
   "allowScripts": {
     "@deepseek-ai/dsh-subprocess-local@0.1.7-rc.2": true,
     "koffi@3.3.1": true,
@@ -30,10 +30,13 @@
     "@google/genai@1.52.0": true,
     "protobufjs@7.6.6": true
   },
+  "overrides": {
+    "fflate": "0.8.3"
+  },
   "dependencyLock": {
     "path": "locks/package-lock.json",
     "url": "package-lock.json",
-    "sha256": "666b7779dec33679ef0f3daaaf4be60f540a7c0650a6ae6490ae8bef2ad99fdf"
+    "sha256": "b086d9f0e655a482a60918ef7c353c0109d352cad8ea3e44d5ff15adc4604be8"
   },
   "release": {
     "repository": "techjarves/deepseek-harness-portable",
