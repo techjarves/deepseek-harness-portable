@@ -10,6 +10,6 @@
   },
   "dependencies": {
     "@deepseek-ai/dsh": "0.1.7-rc.2",
-    "pnpm": "11.7.0"
+    "pnpm": "11.11.0"
   }
 }
