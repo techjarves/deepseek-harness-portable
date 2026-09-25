@@ -11,6 +11,16 @@ $archive = Join-Path $root 'packages\bootstrap\windows-x64\node.zip'
 $url = 'https://nodejs.org/dist/v24.21.0/node-v24.21.0-win-x64.zip'
 $hash = '158f7685b44de51f6c0df1d153526cbcd3e1bc739a8dfc607721cef75de9e541'
 
+function Get-Sha256([string]$Path) {
+  $stream = [IO.File]::OpenRead($Path)
+  try {
+    $sha = [Security.Cryptography.SHA256]::Create()
+    try { return ([BitConverter]::ToString($sha.ComputeHash($stream))).Replace('-', '').ToLowerInvariant() }
+    finally { $sha.Dispose() }
+  }
+  finally { $stream.Dispose() }
+}
+
 if (-not (Test-Path $node -PathType Leaf)) {
   Write-Host 'Preparing portable Node.js for windows-x64...'
   New-Item -ItemType Directory -Force -Path (Split-Path $archive), $runtime | Out-Null
@@ -19,7 +29,7 @@ if (-not (Test-Path $node -PathType Leaf)) {
     Invoke-WebRequest -UseBasicParsing -Uri $url -OutFile $partial
     Move-Item -Force $partial $archive
   }
-  if ((Get-FileHash -Algorithm SHA256 $archive).Hash.ToLowerInvariant() -ne $hash) {
+  if ((Get-Sha256 $archive) -ne $hash) {
     Move-Item -Force $archive "$archive.bad"
     throw 'Node.js checksum mismatch; the download was quarantined.'
   }
