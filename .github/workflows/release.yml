@@ -1,0 +1,31 @@
+name: release
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Release tag
+        required: true
+        default: v1.0.0
+permissions:
+  contents: write
+  id-token: write
+  attestations: write
+jobs:
+  release:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build portable starter archive
+        run: |
+          mkdir -p dist
+          git archive --format=zip --output=dist/deepseek-harness-portable.zip HEAD
+          cp scripts/manifest.json dist/manifest.json
+          cp scripts/locks/package-lock.json dist/package-lock.json
+          sha256sum dist/* > dist/SHA256SUMS
+      - uses: actions/attest-build-provenance@v2
+        with:
+          subject-path: dist/deepseek-harness-portable.zip
+      - uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ inputs.tag }}
+          files: dist/*

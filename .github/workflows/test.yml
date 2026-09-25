@@ -1,0 +1,37 @@
+name: test
+on: [push, pull_request]
+jobs:
+  portable:
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-22.04
+            launcher: linux.sh
+          - os: ubuntu-24.04
+            launcher: linux.sh
+          - os: macos-14
+            launcher: mac.sh
+          - os: windows-2022
+            launcher: windows.bat
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Static shell checks
+        if: runner.os != 'Windows'
+        run: sh -n linux.sh mac.sh scripts/portable.sh scripts/reset.sh
+      - name: Initialize current platform
+        shell: bash
+        run: |
+          if [ "${{ runner.os }}" = Windows ]; then cmd.exe /c "windows.bat setup"; else sh "${{ matrix.launcher }}" setup; fi
+      - name: Contract tests
+        shell: bash
+        run: |
+          if [ "${{ runner.os }}" = Windows ]; then runtimes/windows-x64/node/node.exe scripts/tests/test-portable.mjs; elif [ "${{ runner.os }}" = macOS ]; then runtimes/macos-arm64/node/bin/node scripts/tests/test-portable.mjs; else runtimes/linux-x64/node/bin/node scripts/tests/test-portable.mjs; fi
+      - name: Doctor
+        shell: bash
+        run: |
+          if [ "${{ runner.os }}" = Windows ]; then cmd.exe /c "windows.bat doctor"; else sh "${{ matrix.launcher }}" doctor; fi
+      - name: CLI smoke
+        shell: bash
+        run: |
+          if [ "${{ runner.os }}" = Windows ]; then cmd.exe /c "windows.bat -- --help"; else sh "${{ matrix.launcher }}" -- --help; fi
