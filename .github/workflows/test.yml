@@ -20,18 +20,24 @@ jobs:
         if: runner.os != 'Windows'
         run: sh -n linux.sh mac.sh scripts/portable.sh scripts/reset.sh
       - name: Initialize current platform
-        shell: bash
+        shell: pwsh
         run: |
-          if [ "${{ runner.os }}" = Windows ]; then cmd.exe /c "windows.bat setup"; else sh "${{ matrix.launcher }}" setup; fi
+          if ("${{ runner.os }}" -eq "Windows") { & .\windows.bat setup } else { sh "./${{ matrix.launcher }}" setup }
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
       - name: Contract tests
-        shell: bash
+        shell: pwsh
         run: |
-          if [ "${{ runner.os }}" = Windows ]; then runtimes/windows-x64/node/node.exe scripts/tests/test-portable.mjs; elif [ "${{ runner.os }}" = macOS ]; then runtimes/macos-arm64/node/bin/node scripts/tests/test-portable.mjs; else runtimes/linux-x64/node/bin/node scripts/tests/test-portable.mjs; fi
+          if ("${{ runner.os }}" -eq "Windows") { & .\runtimes\windows-x64\node\node.exe scripts/tests/test-portable.mjs }
+          elseif ("${{ runner.os }}" -eq "macOS") { & ./runtimes/macos-arm64/node/bin/node scripts/tests/test-portable.mjs }
+          else { & ./runtimes/linux-x64/node/bin/node scripts/tests/test-portable.mjs }
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
       - name: Doctor
-        shell: bash
+        shell: pwsh
         run: |
-          if [ "${{ runner.os }}" = Windows ]; then cmd.exe /c "windows.bat doctor"; else sh "${{ matrix.launcher }}" doctor; fi
+          if ("${{ runner.os }}" -eq "Windows") { & .\windows.bat doctor } else { sh "./${{ matrix.launcher }}" doctor }
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
       - name: CLI smoke
-        shell: bash
+        shell: pwsh
         run: |
-          if [ "${{ runner.os }}" = Windows ]; then cmd.exe /c "windows.bat -- --help"; else sh "${{ matrix.launcher }}" -- --help; fi
+          if ("${{ runner.os }}" -eq "Windows") { & .\windows.bat -- --help } else { sh "./${{ matrix.launcher }}" -- --help }
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
