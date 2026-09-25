@@ -1,8 +1,9 @@
 {
   "schema": 1,
-  "portableVersion": "1.0.2",
+  "portableVersion": "1.0.3",
   "deepseekHarness": {
     "package": "@deepseek-ai/dsh",
+    "updateChannel": "next",
     "version": "0.1.7-rc.2",
     "repositoryCommit": "477b4f420553e8a52c2fbccc464d7561b239c443",
     "integrity": "sha512-SQFhriLvza8GnFApnC5/32AgpcyKxrWnYXhvwDOLJdgWpkCX2EexyR9c8kCkMITJXnFLEN3Qb2CEh0W36vkLyw=="
@@ -40,6 +41,7 @@
   },
   "release": {
     "repository": "techjarves/deepseek-harness-portable",
-    "manifestUrl": "https://github.com/techjarves/deepseek-harness-portable/releases/latest/download/manifest.json"
+    "manifestUrl": "https://github.com/techjarves/deepseek-harness-portable/releases/latest/download/manifest.json",
+    "autoUpdateHours": 6
   }
 }

@@ -18,6 +18,18 @@ function writeJson(path, value) {
   writeFileSync(staged, `${JSON.stringify(value, null, 2)}\n`)
   renameSync(staged, path)
 }
+function versionsEqual(left, right) {
+  return left.portableVersion === right.portableVersion
+    && left.deepseekHarness?.version === right.deepseekHarness?.version
+    && left.dependencyLock?.sha256 === right.dependencyLock?.sha256
+}
+function comparePortableVersions(left, right) {
+  const a = String(left).split('.').map(Number)
+  const b = String(right).split('.').map(Number)
+  if (a.length !== 3 || b.length !== 3 || [...a, ...b].some(value => !Number.isInteger(value))) return 0
+  for (let index = 0; index < 3; index += 1) if (a[index] !== b[index]) return a[index] - b[index]
+  return 0
+}
 function run(command, args, options = {}) {
   const result = spawnSync(command, args, { stdio: 'inherit', ...options })
   if (result.error) throw result.error
@@ -173,8 +185,9 @@ function containsSymlink(base) {
   return false
 }
 
-function launch(dshArgs) {
+async function launch(dshArgs) {
   ensureLayout()
+  await maybeAutoUpdate()
   if (!installed()) setup()
   const result = spawnSync(node, [dshBin, ...dshArgs], { stdio: 'inherit', cwd: process.cwd(), env })
   if (result.error) throw result.error
@@ -194,6 +207,14 @@ async function portableUpdate(rest) {
   if (!response.ok) fail(`manifest download failed: HTTP ${response.status}`)
   const candidate = await response.json()
   if (candidate.schema !== 1 || !candidate.deepseekHarness?.version || !candidate.node?.[target]?.sha256 || !candidate.dependencyLock?.sha256) fail('remote manifest is invalid')
+  if (comparePortableVersions(candidate.portableVersion, manifest.portableVersion) < 0) {
+    log('local portable bootstrap is newer than the published release')
+    return 0
+  }
+  if (versionsEqual(candidate, manifest)) {
+    log('already on the latest tested portable release')
+    return 0
+  }
   if (candidate.node.version !== manifest.node.version) fail('this update changes Node.js; download the newer portable bootstrap release')
   const lockUrl = new URL(candidate.dependencyLock.url, url)
   const lockResponse = await fetch(lockUrl)
@@ -219,14 +240,33 @@ async function portableUpdate(rest) {
   return 0
 }
 
+async function maybeAutoUpdate() {
+  if (process.env.DSH_PORTABLE_NO_AUTO_UPDATE === '1') return
+  const intervalHours = Number(manifest.release?.autoUpdateHours ?? 6)
+  if (!Number.isFinite(intervalHours) || intervalHours < 0) return
+  const checkPath = join(state, 'update-check.json')
+  try {
+    const last = readJson(checkPath)
+    if (Date.now() - Date.parse(last.checkedAt) < intervalHours * 60 * 60 * 1000) return
+  } catch {}
+  try {
+    log('checking for a tested portable update')
+    await portableUpdate([])
+    writeJson(checkPath, { checkedAt: new Date().toISOString(), portableVersion: manifest.portableVersion })
+  } catch (error) {
+    log(`automatic update skipped: ${error.message}`)
+    log('continuing with the installed version')
+  }
+}
+
 async function main() {
   const command = args[0] ?? 'web'
   const rest = args.slice(1)
   if (command === 'setup') { setup(); return 0 }
   if (command === 'doctor') return doctor()
   if (command === 'portable-update') return portableUpdate(rest)
-  if (command === '--') return launch(rest)
-  return launch(args.length ? args : ['web'])
+  if (command === '--') return await launch(rest)
+  return await launch(args.length ? args : ['web'])
 }
 
 try { process.exitCode = await main() }

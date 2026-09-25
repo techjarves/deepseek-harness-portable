@@ -1,0 +1,136 @@
+name: automatic-upstream-update
+
+on:
+  schedule:
+    - cron: '17 */6 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  id-token: write
+  attestations: write
+
+concurrency:
+  group: automatic-upstream-update
+  cancel-in-progress: false
+
+jobs:
+  prepare:
+    runs-on: ubuntu-24.04
+    outputs:
+      changed: ${{ steps.update.outputs.changed }}
+      tag: ${{ steps.update.outputs.tag }}
+      commit_sha: ${{ steps.meta.outputs.commit_sha }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24.21.0'
+          registry-url: https://registry.npmjs.org
+      - id: update
+        name: Detect and prepare a forward DeepSeek Harness update
+        run: node scripts/automation/update-deepseek.mjs
+      - id: meta
+        run: echo "commit_sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+      - uses: actions/upload-artifact@v4
+        if: steps.update.outputs.changed == 'true'
+        with:
+          name: tested-candidate
+          path: |
+            scripts/manifest.json
+            scripts/locks/package.json
+            scripts/locks/package-lock.json
+          if-no-files-found: error
+
+  test:
+    needs: prepare
+    if: needs.prepare.outputs.changed == 'true'
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-22.04
+            launcher: linux.sh
+          - os: ubuntu-24.04
+            launcher: linux.sh
+          - os: macos-14
+            launcher: mac.sh
+          - os: windows-2022
+            launcher: windows.bat
+    runs-on: ${{ matrix.os }}
+    env:
+      DSH_PORTABLE_NO_AUTO_UPDATE: '1'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.prepare.outputs.commit_sha }}
+      - uses: actions/download-artifact@v4
+        with:
+          name: tested-candidate
+          path: .
+      - name: Static shell checks
+        if: runner.os != 'Windows'
+        run: sh -n linux.sh mac.sh scripts/portable.sh scripts/reset.sh
+      - name: Initialize candidate
+        shell: pwsh
+        run: |
+          if ("${{ runner.os }}" -eq "Windows") { & .\windows.bat setup } else { sh "./${{ matrix.launcher }}" setup }
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Contract tests
+        shell: pwsh
+        run: |
+          if ("${{ runner.os }}" -eq "Windows") { & .\runtimes\windows-x64\node\node.exe scripts/tests/test-portable.mjs }
+          elseif ("${{ runner.os }}" -eq "macOS") { & ./runtimes/macos-arm64/node/bin/node scripts/tests/test-portable.mjs }
+          else { & ./runtimes/linux-x64/node/bin/node scripts/tests/test-portable.mjs }
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Doctor
+        shell: pwsh
+        run: |
+          if ("${{ runner.os }}" -eq "Windows") { & .\windows.bat doctor } else { sh "./${{ matrix.launcher }}" doctor }
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: CLI smoke
+        shell: pwsh
+        run: |
+          if ("${{ runner.os }}" -eq "Windows") { & .\windows.bat -- --help } else { sh "./${{ matrix.launcher }}" -- --help }
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+  release:
+    needs: [prepare, test]
+    if: needs.prepare.outputs.changed == 'true'
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.prepare.outputs.commit_sha }}
+      - uses: actions/download-artifact@v4
+        with:
+          name: tested-candidate
+          path: .
+      - name: Publish tested source update
+        shell: bash
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add scripts/manifest.json scripts/locks/package.json scripts/locks/package-lock.json
+          dsh_version=$(node -p "require('./scripts/manifest.json').deepseekHarness.version")
+          git commit -m "Update DeepSeek Harness to ${dsh_version}"
+          git push origin HEAD:main
+      - name: Build portable release
+        run: |
+          mkdir -p dist
+          git archive --format=zip --output=dist/deepseek-harness-portable.zip HEAD
+          cp scripts/manifest.json dist/manifest.json
+          cp scripts/locks/package-lock.json dist/package-lock.json
+          (cd dist && sha256sum deepseek-harness-portable.zip manifest.json package-lock.json > SHA256SUMS)
+      - uses: actions/attest-build-provenance@v2
+        with:
+          subject-path: dist/deepseek-harness-portable.zip
+      - uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ needs.prepare.outputs.tag }}
+          name: ${{ needs.prepare.outputs.tag }}
+          generate_release_notes: true
+          make_latest: true
+          files: dist/*

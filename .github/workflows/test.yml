@@ -2,6 +2,8 @@ name: test
 on: [push, pull_request]
 jobs:
   portable:
+    env:
+      DSH_PORTABLE_NO_AUTO_UPDATE: '1'
     strategy:
       matrix:
         include:
