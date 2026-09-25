@@ -7,6 +7,11 @@ function fail(message) { throw new Error(message) }
 function log(message) { process.stdout.write(`[portable] ${message}\n`) }
 function readJson(path) { return JSON.parse(readFileSync(path, 'utf8')) }
 function sha256(data) { return createHash('sha256').update(data).digest('hex') }
+// Git may check text files out with CRLF on Windows. The release lock is hashed
+// in its canonical LF form so the same signed manifest works on every host.
+function sha256CanonicalText(data) {
+  return sha256(Buffer.from(data.toString('utf8').replace(/\r\n/g, '\n'), 'utf8'))
+}
 function writeJson(path, value) {
   mkdirSync(resolve(path, '..'), { recursive: true })
   const staged = `${path}.new`
@@ -109,7 +114,7 @@ function setup() {
     })
     const lockPath = join(scripts, manifest.dependencyLock.path)
     const lockBytes = readFileSync(lockPath)
-    if (sha256(lockBytes) !== manifest.dependencyLock.sha256) fail('tested npm dependency lock checksum mismatch')
+    if (sha256CanonicalText(lockBytes) !== manifest.dependencyLock.sha256) fail('tested npm dependency lock checksum mismatch')
     copyFileSync(lockPath, join(stage, 'package-lock.json'))
     log(`installing DeepSeek Harness ${version} for ${target}`)
     run(node, [npmCli, 'ci', '--prefix', stage, '--omit=dev', '--no-audit', '--no-fund', '--no-bin-links'], { env })
