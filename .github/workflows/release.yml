@@ -5,7 +5,7 @@ on:
       tag:
         description: Release tag
         required: true
-        default: v1.0.0
+        default: v1.0.1
 permissions:
   contents: write
   id-token: write
@@ -21,7 +21,7 @@ jobs:
           git archive --format=zip --output=dist/deepseek-harness-portable.zip HEAD
           cp scripts/manifest.json dist/manifest.json
           cp scripts/locks/package-lock.json dist/package-lock.json
-          sha256sum dist/* > dist/SHA256SUMS
+          (cd dist && sha256sum deepseek-harness-portable.zip manifest.json package-lock.json > SHA256SUMS)
       - uses: actions/attest-build-provenance@v2
         with:
           subject-path: dist/deepseek-harness-portable.zip
