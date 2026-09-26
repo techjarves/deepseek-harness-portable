@@ -30,9 +30,9 @@ User settings, credentials, sessions, skills, and plugins live in `data/dsh-home
 
 ## Automatic updates
 
-Every normal launch checks at most once every six hours for the newest release that passed the Windows, Linux, macOS, and security test matrix. A verified update is installed atomically before DeepSeek Harness starts. Network errors or failed installation leave the previous runtime active and startup continues normally. Set `DSH_PORTABLE_NO_AUTO_UPDATE=1` only when an update check must be disabled.
+Every normal launch checks at most once every 24 hours for the newest release that passed the Windows, Linux, macOS, and security test matrix. A verified update is installed atomically before DeepSeek Harness starts. Network errors or failed installation leave the previous runtime active and startup continues normally. Set `DSH_PORTABLE_NO_AUTO_UPDATE=1` only when an update check must be disabled.
 
-The repository also runs a scheduled GitHub workflow every six hours. It watches DeepSeek Harness's npm `next` channel, generates an exact dependency lock, audits it, tests every supported platform, increments the portable version, commits the tested files, and publishes the checksummed release without developer intervention. Failed candidates are never published and the prior release remains available.
+The repository also runs a scheduled GitHub workflow once per day. It watches DeepSeek Harness's npm `next` channel, generates an exact dependency lock, audits it, tests every supported platform, increments the portable version, commits the tested files, and publishes the checksummed release without developer intervention. Failed candidates are never published and the prior release remains available.
 
 ## Credentials and models
 

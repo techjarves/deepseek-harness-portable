@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "portableVersion": "1.0.3",
+  "portableVersion": "1.0.4",
   "deepseekHarness": {
     "package": "@deepseek-ai/dsh",
     "updateChannel": "next",
@@ -42,6 +42,6 @@
   "release": {
     "repository": "techjarves/deepseek-harness-portable",
     "manifestUrl": "https://github.com/techjarves/deepseek-harness-portable/releases/latest/download/manifest.json",
-    "autoUpdateHours": 6
+    "autoUpdateHours": 24
   }
 }

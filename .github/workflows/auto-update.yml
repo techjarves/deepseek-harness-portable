@@ -2,7 +2,7 @@ name: automatic-upstream-update
 
 on:
   schedule:
-    - cron: '17 */6 * * *'
+    - cron: '17 2 * * *'
   workflow_dispatch:
 
 permissions:
