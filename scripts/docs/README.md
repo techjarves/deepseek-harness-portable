@@ -1,5 +1,7 @@
 # DeepSeek Harness Portable
 
+The polished project overview, platform matrix, security guidance, and current release links are available in [the GitHub-facing README](../../.github/README.md).
+
 This package runs the official `@deepseek-ai/dsh` distribution without installing Node.js, pnpm, or DeepSeek Harness on the host computer.
 
 ## Start
