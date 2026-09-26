@@ -1,8 +1,8 @@
 # DeepSeek Harness Portable
 
-[![Cross-platform tests](https://github.com/techjarves/deepseek-harness-portable/actions/workflows/test.yml/badge.svg)](https://github.com/techjarves/deepseek-harness-portable/actions/workflows/test.yml)
-[![Automatic updates](https://github.com/techjarves/deepseek-harness-portable/actions/workflows/auto-update.yml/badge.svg)](https://github.com/techjarves/deepseek-harness-portable/actions/workflows/auto-update.yml)
-[![Latest release](https://img.shields.io/github/v/release/techjarves/deepseek-harness-portable?display_name=tag)](https://github.com/techjarves/deepseek-harness-portable/releases/latest)
+[![Cross-platform tests](https://github.com/techjarves/Deepseek-Harness-Portable/actions/workflows/test.yml/badge.svg)](https://github.com/techjarves/Deepseek-Harness-Portable/actions/workflows/test.yml)
+[![Automatic updates](https://github.com/techjarves/Deepseek-Harness-Portable/actions/workflows/auto-update.yml/badge.svg)](https://github.com/techjarves/Deepseek-Harness-Portable/actions/workflows/auto-update.yml)
+[![Latest release](https://img.shields.io/github/v/release/techjarves/Deepseek-Harness-Portable?display_name=tag)](https://github.com/techjarves/Deepseek-Harness-Portable/releases/latest)
 
 Run the official DeepSeek Harness from one portable folder on Windows, Linux, and macOS. Host-level Node.js or npm installation is not required.
 
@@ -20,7 +20,7 @@ Windows ARM64, Linux ARM64, macOS Intel, and musl-based Linux distributions are 
 
 ## Quick start
 
-Download [the latest portable ZIP](https://github.com/techjarves/deepseek-harness-portable/releases/latest/download/deepseek-harness-portable.zip), extract it, and run the launcher for the current operating system.
+Download [the latest portable ZIP](https://github.com/techjarves/Deepseek-Harness-Portable/releases/latest/download/deepseek-harness-portable.zip), extract it, and run the launcher for the current operating system.
 
 ### Windows
 
@@ -128,7 +128,7 @@ Every source change is tested through GitHub Actions on:
 - Ubuntu 24.04 x64
 - Apple Silicon macOS
 
-See [the test history](https://github.com/techjarves/deepseek-harness-portable/actions/workflows/test.yml) for current results.
+See [the test history](https://github.com/techjarves/Deepseek-Harness-Portable/actions/workflows/test.yml) for current results.
 
 ## Project layout
 
